@@ -1,7 +1,8 @@
-import React, { useState} from 'react';
+import React, { useState } from 'react';
 import UserInfoForm from './UserInfoForm';
 import UserTable from './UserTable';
 import './index.css';
+import './App.css';
 
 const App = () => {
     const [users, setUsers] = useState([]);
@@ -27,13 +28,18 @@ const App = () => {
     };
 
     return (
-        <div>
-          
-            <UserInfoForm addUser={addUser} editingUser={editingIndex !== null ? users[editingIndex] : null} updateUser={(user) => editUser(editingIndex, user)} />
-            <UserTable users={users} deleteUser={deleteUser} startEditUser={startEditUser} />
-
-            <UserTable/>
-            <UserInfoForm/>
+        <div className="container">
+            <h1>نموذج المستخدم</h1>
+            <UserInfoForm addUser={addUser} 
+                editingUser={editingIndex !== null ? users[editingIndex] : null} 
+                updateUser={(user) => editUser(editingIndex, user)} 
+            />
+            <h1>قائمة المستخدمين</h1>
+            <UserTable 
+                users={users} 
+                deleteUser={deleteUser} 
+                startEditUser={startEditUser} 
+            />
         </div>
     );
 };

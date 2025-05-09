@@ -1,142 +1,100 @@
 import React, { useState, useEffect } from 'react';
 import './index.css';
 
+const initialState = {
+  name: '',
+  age: '',
+  phoneNumber: '',
+  isEmployee: false,
+  option: ''
+};
+
 const UserInfoForm = ({ addUser, editingUser, updateUser }) => {
-    const [name, setName] = useState('');
-    const [age, setAge] = useState('');
-    const [phoneNumber, setPhoneNumber] = useState('');
-    const [isEmployee, setIsEmployee] = useState(false);
-    const [option, setOption] = useState('');
+  const [form, setForm] = useState(initialState);
 
-    useEffect(() => {
-        if (editingUser) {
-            setName(editingUser.name);
-            setAge(editingUser.age);
-            setPhoneNumber(editingUser.phoneNumber);
-            setIsEmployee(editingUser.isEmployee);
-            setOption(editingUser.option);
-        } else {
-            const storedForm = JSON.parse(localStorage.getItem('formState'));
-            if (storedForm) {
-                setName(storedForm.name);
-                setAge(storedForm.age);
-                setPhoneNumber(storedForm.phoneNumber);
-                setIsEmployee(storedForm.isEmployee);
-                setOption(storedForm.option);
-            }
-        }
-    }, [editingUser]);
+  useEffect(() => {
+    if (editingUser) {
+      setForm(editingUser);
+    } else {
+      const stored = localStorage.getItem('formState');
+      if (stored) setForm(JSON.parse(stored));
+    }
+  }, [editingUser]);
 
-    useEffect(() => {
-        const formState = { name, age, phoneNumber, isEmployee, option };
-        localStorage.setItem('formState', JSON.stringify(formState));
-    }, [name, age, phoneNumber, isEmployee, option]);
+  useEffect(() => {
+    localStorage.setItem('formState', JSON.stringify(form));
+  }, [form]);
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
+  const handleChange = (e) => {
+    const { name, value, type, checked } = e.target;
+    setForm(prev => ({
+      ...prev,
+      [name]: type === 'checkbox' ? checked : value
+    }));
+  };
 
-        if (!isEmployee) {
-            alert("You must check the 'Employee' checkbox.");
-            return;
-        }
+  const handlePhoneChange = (e) => {
+    const val = e.target.value;
+    if (/^\d{0,12}$/.test(val)) {
+      setForm(prev => ({ ...prev, phoneNumber: val }));
+    }
+  };
 
-        if (option === '') {
-            alert("You must select an option from the dropdown.");
-            return;
-        }
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (!form.isEmployee) return alert("Please check 'Employee'.");
+    if (!form.option) return alert("Please select an option.");
 
-        const userInfo = {
-            name,
-            age,
-            phoneNumber,
-            isEmployee,
-            option
-        };
+    editingUser ? updateUser(form) : addUser(form);
+    setForm(initialState);
+    localStorage.removeItem('formState');
+  };
 
-        if (editingUser) {
-            updateUser(userInfo);
-        } else {
-            addUser(userInfo);
-        }
-
-        // Reset form fields
-        setName('');
-        setAge('');
-        setPhoneNumber('');
-        setIsEmployee(false);
-        setOption('');
-        localStorage.removeItem('formState');
-    };
-
-    const handlePhoneNumberChange = (e) => {
-        const value = e.target.value;
-        if (/^\d{0,12}$/.test(value)) {
-            setPhoneNumber(value);
-        }
-    };
-
-    return (
-        <form onSubmit={handleSubmit}>
-            <div>
-                <label htmlFor="name">Name:</label>
-                <input
-                    type="text"
-                    id="name"
-                    value={name}
-                    onChange={(e) => setName(e.target.value)}
-                    required
-                />
-            </div>
-            <div>
-                <label htmlFor="age">Age:</label>
-                <input
-                    type="number"
-                    id="age"
-                    value={age}
-                    onChange={(e) => setAge(e.target.value)}
-                    required
-                />
-            </div>
-            <div>
-                <label htmlFor="phoneNumber">Phone Number:</label>
-                <input
-                    type="tel"
-                    id="phoneNumber"
-                    value={phoneNumber}
-                    onChange={handlePhoneNumberChange}
-                    pattern="^\d{8,12}$"
-                    title="Phone number must be between 8 and 12 digits"
-                    required
-                />
-            </div>
-            <div>
-                <label htmlFor="isEmployee">
-                    <input
-                        type="checkbox"
-                        id="isEmployee"
-                        checked={isEmployee}
-                        onChange={(e) => setIsEmployee(e.target.checked)}
-                    />
-                    Employee
-                </label>
-            </div>
-            <div>
-                <label htmlFor="option">Select an option:</label>
-                <select
-                    id="option"
-                    value={option}
-                    onChange={(e) => setOption(e.target.value)}
-                    required
-                >
-                    <option value="">--Please choose an option--</option>
-                    <option value="option1">Option 1</option>
-                    <option value="option2">Option 2</option>
-                    <option value="option3">Option 3</option>
-                </select>
-            </div>
-            <button type="submit">{editingUser ? 'Update Information' : 'Send Information'}</button>
-        </form>
-    );
+  return (
+    <form onSubmit={handleSubmit}>
+      <div>
+        <label>Name:</label>
+        <input name="name" value={form.name} onChange={handleChange} required />
+      </div>
+      <div>
+        <label>Age:</label>
+        <input name="age" type="number" value={form.age} onChange={handleChange} required />
+      </div>
+      <div>
+        <label>Phone Number:</label>
+        <input
+          name="phoneNumber"
+          type="tel"
+          value={form.phoneNumber}
+          onChange={handlePhoneChange}
+          pattern="^\d{8,12}$"
+          title="Phone number must be 8 to 12 digits"
+          required
+        />
+      </div>
+      <div>
+        <label>
+          <input
+            type="checkbox"
+            name="isEmployee"
+            checked={form.isEmployee}
+            onChange={handleChange}
+          />
+          Employee
+        </label>
+      </div>
+      <div>
+        <label>Select an option:</label>
+        <select name="option" value={form.option} onChange={handleChange} required>
+          <option value="">--Please choose an option--</option>
+          <option value="option1">Option 1</option>
+          <option value="option2">Option 2</option>
+          <option value="option3">Option 3</option>
+        </select>
+      </div>
+      <button type="submit">{editingUser ? 'Update' : 'Send'}</button>
+    </form>
+  );
 };
 
 export default UserInfoForm;
